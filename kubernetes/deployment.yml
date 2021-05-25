@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: room
+  namespace: airbnb
+  labels:
+    app: room
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: room
+  template:
+    metadata:
+      labels:
+        app: room
+    spec:
+      containers:
+        - name: room
+          image: 052937454741.dkr.ecr.ap-northeast-2.amazonaws.com/user07-room:latest
+          ports:
+            - containerPort: 8080
+#          resources:
+#            requests:
+#              cpu: "1000m"
+#              memory: "256Mi"
+#            limits:
+#              cpu: "2500m"
+#              memory: "512Mi"
+#          args:
+#            - /bin/sh
+#            - -c
+#            - touch /tmp/healthy; sleep 60; rm -rf /tmp/healthy; sleep 600
+          readinessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+#            exec:
+#              command:
+#              - cat
+#              - /tmp/healthy
+            initialDelaySeconds: 60
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+            successThreshold: 1
