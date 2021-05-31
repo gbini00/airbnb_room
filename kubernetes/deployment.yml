@@ -12,30 +12,35 @@ spec:
       app: room
   template:
     metadata:
-      labels:
+      labels: 
         app: room
     spec:
+      serviceAccount: efs-provisioner
       containers:
         - name: room
-          image: 052937454741.dkr.ecr.ap-northeast-2.amazonaws.com/user07-room:latest
+          image: 985702435631.dkr.ecr.ap-northeast-2.amazonaws.com/room:latest
           ports:
             - containerPort: 8080
 #          resources:
 #            requests:
-#              cpu: "1000m"
 #              memory: "256Mi"
+#              cpu: "1000m"
 #            limits:
-#              cpu: "2500m"
 #              memory: "512Mi"
+#              cpu: "2500m"
 #          args:
 #            - /bin/sh
 #            - -c
-#            - touch /tmp/healthy; sleep 60; rm -rf /tmp/healthy; sleep 600
+#            - touch /tmp/healthy; sleep 90; rm -rf /tmp/healthy; sleep 600
           readinessProbe:
             httpGet:
               path: '/actuator/health'
               port: 8080
-            initialDelaySeconds: 30
+#            exec:
+#              command:
+#              - cat
+#              - /tmp/healthy
+            initialDelaySeconds: 25
             timeoutSeconds: 2
             periodSeconds: 5
             failureThreshold: 5
@@ -53,3 +58,21 @@ spec:
             periodSeconds: 5
             failureThreshold: 5
             successThreshold: 1
+          env:
+            - name: MAX_RESERVATION_PER_PERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: airbnb-config
+                  key: max_reservation_per_person
+            - name: UI_PROPERTIES_FILE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: airbnb-config
+                  key: ui_properties_file_name
+          volumeMounts:
+          - mountPath: "/mnt/aws"
+            name: volume
+      volumes:
+        - name: volume
+          persistentVolumeClaim:
+            claimName: aws-efs
